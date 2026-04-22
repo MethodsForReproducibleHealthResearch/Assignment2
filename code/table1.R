@@ -6,11 +6,17 @@
 # install.packages("readr")
 # install.packages("tidyverse")
 # install.packages("table1")
+# install.packages("knitr")
+# install.packages("webshot2")
+# install.packages("kableExtra")
 
 library(here)
 library(tidyverse)
 library(readr)
 library(table1)
+library(knitr)
+library(webshot2)
+library(kableExtra)
 
 ## CONSTANTS ----
 
@@ -32,12 +38,16 @@ tb1_df <-
     )
 
 
-table1(
+tb1 <- 
+    table1(
     ~ age + 
         female + 
         cost + 
         smoke | 
         cardiac,
     data = tb1_df
-)
+) |> 
+    kable()
+
+as_image(tb1, file = here("outputs", "table1.png"))
 
