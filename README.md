@@ -15,3 +15,5 @@ Create and provide outputs on the following regression models:
   (3) unadjusted effect of smoking on healthcare costs (linear regression)
   (4) adjusted effect of smoking on healthcare costs, controlling for age and sex (linear regression)
 - Generate plots for models (2) and (4)
+
+AI Statement: I attest to the fact that I did not use generative AI technology (e.g., ChatGPT) to complete any portion of the work. 
