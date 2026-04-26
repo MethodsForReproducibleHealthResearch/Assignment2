@@ -13,68 +13,104 @@ library(gtsummary)
 #install.packages("effects")
 library(effects)
 library("cowplot")  
+library(dplyr)
+library(ggplot2)
+library(pROC)
 ```
 ```{r}
 #Read data
-cohort_data <- read.csv("raw-data/cohort.csv")
+cohort_data_raw <- read.csv("raw-data/cohort.csv")
+cohort_data <- cohort_data_raw %>%
+  mutate(row_id = row_number())
 ```
 ```{r}
 #Comprehensive summary table
 tbl_summary(cohort_data)
 ```
 ```{r}
+#Create test-train split 
+set.seed(99)
+
+train <- cohort_data %>%
+  group_by(cardiac, smoke, female, age) %>%
+  slice_sample(prop = 0.7) %>% as.data.frame()
+
+test <- anti_join(cohort_data, train, by = join_by(row_id))
+
+```
+```{r}
 #Build regression models
 
 # Base model (CVD outcome)
 glm_base_cvd_model = glm(cardiac ~ smoke,
-                     data=cohort_data, family=binomial)
+                     data=train, family=binomial)
 summary(glm_base_cvd_model)
 
 # Full model with covariates (CVD outcome)
 glm_full_cvd_model = glm(cardiac ~ smoke + female + age,
-                     data=cohort_data, family=binomial)
+                     data=train, family=binomial)
 summary(glm_full_cvd_model)
 
 # Base model (cost outcome)
 glm_base_cost_model = glm(cost ~ smoke,
-                     data=cohort_data, family=gaussian)
+                     data=train, family=gaussian)
 summary(glm_base_cost_model)
 
 # Full model with covariates (cost outcome)
 glm_full_cost_model = glm(cost ~ smoke + female + age,
-                     data=cohort_data, family=gaussian)
+                     data=train, family=gaussian)
 summary(glm_full_cost_model)
 ```
 ```{r}
-#Generate Figures
+#Test model fit on test data
+test$predict_full_cvd <- predict(glm_full_cvd_model, newdata=test, type = "response")
+test$predict_full_cost <- predict(glm_full_cost_model, newdata=test, type = "response")
 
-#Plot smoking on cardiovascular disease incidence (controlling for sex and age)
+summary(test)
+```
+```{r}
+#Generate Validation Figures
 
-all_cvd<-allEffects(glm_full_cvd_model)
-p1<-plot(all_cvd,"smoke" ,
-    xlab =  "Smoking Status", ylab= "CVD Incidence", 
-         main="Adjusted Effect of Smoking on CVD Incidence")
-p2<-plot(all_cvd,"female" ,
-    xlab =  "Sex", ylab= "CVD Incidence", 
-         main="Adjusted Effect of Sex on CVD Incidence")
-p3<-plot(all_cvd,"age" ,
-    xlab =  "Age", ylab= "CVD", 
-         main="Adjusted Effect of Age on CVD Incidence")
-plot_grid(p1,p2,p3)
+# CVD validation plot
+roc_cvd <- roc(test$cardiac, test$predict_full_cvd)
+ggroc(roc_cvd,color = "skyblue") +
+  labs(title="ROC Curve for CVD Model")
+auc(roc_cvd)
 
+# Cost validation plot
+ggplot(test, aes(x = predict_full_cost, y = cost)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "skyblue") +
+  labs(x = "Predicted Cost", y = "Actual Healthcare Costs",
+       title = "Predicted vs Actual Healthcare Costs (Test Data)")
+```
+```{r}
+#Models Fit to All Data
+glm_full_cvd_all <- glm(cardiac ~ smoke + female + age,
+                         data = cohort_data, family = binomial)
+glm_full_cost_all <- glm(cost ~ smoke + female + age,
+                          data = cohort_data, family = gaussian)
 
-#Plot smoking on healthcare costs (controlling for sex and age)
+# Plot association between smoking and CVD
+smoke_cvd_effect <- as.data.frame(allEffects(glm_full_cvd_all)$smoke)
 
-all_cost<-allEffects(glm_full_cost_model)
-p4<-plot(all_cost,"smoke" ,
-    xlab =  "Smoking Status", ylab= "Healthcare Costs", 
-         main="Adjusted Effect of Smoking on Healthcare Costs")
-p5<-plot(all_cost,"female" ,
-    xlab =  "Sex", ylab= "Healthcare Costs", 
-         main="Adjusted Effect of Sex on Healthcare Costs")
-p6<-plot(all_cost,"age" ,
-    xlab =  "Age", ylab= "Healthcare Costs", 
-         main="Adjusted Effect of Age on Healthcare Costs")
-plot_grid(p4,p5,p6)
+ggplot(smoke_cvd_effect, aes(x = smoke, y = fit)) +
+  geom_point(size = 3, color = "skyblue") +
+  geom_errorbar(aes(ymin = lower, ymax = upper),
+                color = "skyblue") +
+  labs(x = "Smoking Status", y = "Predicted Probability of CVD",
+       title = "Adjusted Effect of Smoking on CVD Incidence")
+
+# Plot association between smoking and healthcare costs
+smoke_cost_effect <- as.data.frame(allEffects(glm_full_cost_all)$smoke)
+
+ggplot(smoke_cost_effect, aes(x = smoke, y = fit)) +
+  geom_point(size = 3, color = "skyblue") +
+  geom_errorbar(aes(ymin = lower, ymax = upper),
+                color = "skyblue") +
+  labs(x = "Smoking Status", y = "Predicted Healthcare Costs",
+       title = "Adjusted Effect of Smoking on Healthcare Costs")
+```
+
 
 ```
