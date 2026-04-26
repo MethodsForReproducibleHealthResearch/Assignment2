@@ -7,12 +7,8 @@ output: html_document
 
 ```{r}
 #Library
-
-#install.packages("gtsummary")
 library(gtsummary)
-#install.packages("effects")
 library(effects)
-library("cowplot")  
 library(dplyr)
 library(ggplot2)
 library(pROC)
@@ -111,6 +107,12 @@ ggplot(smoke_cost_effect, aes(x = smoke, y = fit)) +
   labs(x = "Smoking Status", y = "Predicted Healthcare Costs",
        title = "Adjusted Effect of Smoking on Healthcare Costs")
 ```
+```{r}
+## Summary of Findings:
 
-
+# - This analysis built two models to assess the association between (1) smoking and CVD incidence and (2) smoking and healthcare costs, adjusting for both age and sex.
+# - To validate the models, we created a 70/30 train-test data split. The training dataset was used to build the regression models, and the test dataset was used to compare predicted outcomes to actual outcomes. Validation was plotted as an ROC curve for the logistic regression (smoking and CVD incidence) and as a plot for the linear regression (smoking and healthcare costs).
+# - Our ROC curve yielded an AUC of approximately 0.78, indicating some discriminative ability of the CVD model. The validation plot for the cost model showed reasonable agreement between predicted and actual values.
+# - We then fit the models to the full dataset to assess the direction and magnitude of association between smoking and each outcome.
+# - Overall, we found a positive association between smoking and the predicted probability of CVD incidence, and a positive association between smoking and predicted healthcare costs.
 ```
