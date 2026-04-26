@@ -1,0 +1,86 @@
+---
+title: "Assignment2_Writeup"
+format: html
+editor: visual
+---
+
+```{r}
+#| echo: false
+#read in data and load necessary packages 
+library(gtsummary)
+library(dplyr)
+library(boot)
+library(ggplot2)
+
+data <- read.csv("raw-data/cohort.csv")
+#summary(data)
+
+```
+
+## Descriptive statistics
+
+This simulated data includes 5,000 observations with the following variables:
+
+-   smoke: binary variable; 1 - smoking; 0 - no smoking
+
+-   Female: binary variable: 1 - female; 0 - male
+
+-   Age: Integer ranging from 18 - 72
+
+-   Cardiac: binary variable; 1 - cardiac event; 0 - no cardiac event
+
+-   Cost: in UDS, integer ranging from \$8,012 to \$11,370
+
+```{r}
+tbl_summary(data)
+```
+
+## Prediction Algorithm
+
+Goal: Our goal is to predict the cost given information about smoking history, sex, age, and cardiac. We will train the model on 70% of the data, and withhold 30% for testing.
+
+```{r}
+set.seed(435)
+training <- sample(seq_len(nrow(data)), size = 3500)
+df_train <- data[training, ]
+df_test <- data[-training, ]
+
+m1 <- glm(cost ~ smoke + female + age + cardiac, 
+       data = df_train)
+summary(m1)
+
+df_test$predicted <- predict.glm(m1, newdata = df_test)
+df_test$difference <- df_test$cost - df_test$predicted
+
+
+```
+
+## Figures
+
+We plot two figures:
+
+1.  We plot the expected value on the x-axis versus the predicted value along the y-axis.
+2.  In the second figure, we also plot the difference between the true values and the predicted values.
+
+```{r}
+ggplot(df_test, aes(x = cost, y = predicted)) +
+      geom_point(size = 2) +
+      theme_minimal()
+
+
+hist(df_test$difference,
+     xlab = "Difference in actual cost versus predicted ($)",
+     ylab = "Count")
+```
+
+## Conclusions:
+
+In conclusion, we used the glm package to train a generalized linear model to predict cost from four variables, age, sex, smoking history, and cardiac event. We found that all four of the variables included had a significant coefficient, so we included all four in the model.
+
+Then, we tested the model on data it had not previously seen. In Figure 1, we plotted the true costs versus the predicted costs, and we saw a strong linear relationship between the two. In Figure 2, we plotted a histogram of the differences between the predicted costs and the true costs. We found that those difference were normally distributed around zero.
+
+Taken together, this suggests our model does a reasonably sufficient job at predicting costs using age, sex, smoking history, and cardiac event.
+
+## AI Statement: 
+
+No Generative AI was used for any portion of this assignment.
