@@ -1,0 +1,80 @@
+---
+title: "HRP-203-Assignment-2"
+author: "Nagireddy, Himaja"
+date: "2026-04-26"
+output: html_document
+---
+
+```{r}
+#Library
+
+#install.packages("gtsummary")
+library(gtsummary)
+#install.packages("effects")
+library(effects)
+library("cowplot")  
+```
+```{r}
+#Read data
+cohort_data <- read.csv("raw-data/cohort.csv")
+```
+```{r}
+#Comprehensive summary table
+tbl_summary(cohort_data)
+```
+```{r}
+#Build regression models
+
+# Base model (CVD outcome)
+glm_base_cvd_model = glm(cardiac ~ smoke,
+                     data=cohort_data, family=binomial)
+summary(glm_base_cvd_model)
+
+# Full model with covariates (CVD outcome)
+glm_full_cvd_model = glm(cardiac ~ smoke + female + age,
+                     data=cohort_data, family=binomial)
+summary(glm_full_cvd_model)
+
+# Base model (cost outcome)
+glm_base_cost_model = glm(cost ~ smoke,
+                     data=cohort_data, family=gaussian)
+summary(glm_base_cost_model)
+
+# Full model with covariates (cost outcome)
+glm_full_cost_model = glm(cost ~ smoke + female + age,
+                     data=cohort_data, family=gaussian)
+summary(glm_full_cost_model)
+```
+```{r}
+#Generate Figures
+
+#Plot smoking on cardiovascular disease incidence (controlling for sex and age)
+
+all_cvd<-allEffects(glm_full_cvd_model)
+p1<-plot(all_cvd,"smoke" ,
+    xlab =  "Smoking Status", ylab= "CVD Incidence", 
+         main="Adjusted Effect of Smoking on CVD Incidence")
+p2<-plot(all_cvd,"female" ,
+    xlab =  "Sex", ylab= "CVD Incidence", 
+         main="Adjusted Effect of Sex on CVD Incidence")
+p3<-plot(all_cvd,"age" ,
+    xlab =  "Age", ylab= "CVD", 
+         main="Adjusted Effect of Age on CVD Incidence")
+plot_grid(p1,p2,p3)
+
+
+#Plot smoking on healthcare costs (controlling for sex and age)
+
+all_cost<-allEffects(glm_full_cost_model)
+p4<-plot(all_cost,"smoke" ,
+    xlab =  "Smoking Status", ylab= "Healthcare Costs", 
+         main="Adjusted Effect of Smoking on Healthcare Costs")
+p5<-plot(all_cost,"female" ,
+    xlab =  "Sex", ylab= "Healthcare Costs", 
+         main="Adjusted Effect of Sex on Healthcare Costs")
+p6<-plot(all_cost,"age" ,
+    xlab =  "Age", ylab= "Healthcare Costs", 
+         main="Adjusted Effect of Age on Healthcare Costs")
+plot_grid(p4,p5,p6)
+
+```
