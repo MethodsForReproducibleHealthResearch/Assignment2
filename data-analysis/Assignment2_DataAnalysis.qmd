@@ -42,8 +42,9 @@ Binary Variables: female, cardiac, smoke
 
 Continuous Variables: age, cost
 
-```{r, results='asis'}
+```{r}
 library(table1)
+library(kableExtra)
 
 # Make binary variables factors
 synthetic_df$female <- factor(synthetic_df$female, levels=c(0,1), labels=c("Male", "Female"))
@@ -57,7 +58,10 @@ label(synthetic_df$cost) <- "Cost"
 label(synthetic_df$age) <- "Age"
 
 # create table 1
-table1(~ cost + age + female + smoke | cardiac, data = synthetic_df)
+tableOne <- table1(~ cost + age + female + smoke | cardiac, data = synthetic_df)
+
+# Save as PNG
+save_kable(tableOne, file = "table1.png")
 ```
 
 ## Data Analysis
