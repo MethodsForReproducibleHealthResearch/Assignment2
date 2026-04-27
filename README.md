@@ -2,7 +2,7 @@
 
 This repository includes the simulated data for Assignment #2 for HRP 203 (Methods for Reproducible Health Research) class.
 
-# Summary of findings
+## Summary of findings
 The script `analysis.r` was run on the cohort of 5,000 individuals (data in the raw-data folder; mean age 44.9, 57.3% female, 12.9% smokers). 
 As `table.csv` shows, a cardiac event occurred in 5.5% of the sample, 
 but the rate varied substantially across
@@ -20,6 +20,6 @@ four groups are clearly separated, with male smokers at the
 top and female non-smokers at the bottom, and each band slopes slightly upward
 with age. It is interesting that smoking's effect is much larger in men than in women, and that observation should be studied further. 
 
-# Generative AI statement
+## Generative AI statement
 
 I attest to the fact that I did not use generative AI technology to complete any portion of the work.
