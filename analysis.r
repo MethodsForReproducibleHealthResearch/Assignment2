@@ -88,9 +88,9 @@ df$group <- factor(df$group,
                    levels = c("Male smoker", "Female smoker",
                               "Male non-smoker", "Female non-smoker"))
 
-group_colors <- c("Male smoker"       = "red",
-                  "Female smoker"     = "blue",
-                  "Male non-smoker"   = "purple",
+group_colors <- c("Male smoker" = "red",
+                  "Female smoker" = "blue",
+                  "Male non-smoker" = "purple",
                   "Female non-smoker" = "darkgreen")
 
 png("figure.png", width = 800, height = 550)
