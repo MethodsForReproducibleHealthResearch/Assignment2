@@ -3,7 +3,7 @@
 This repository includes the simulated data for Assignment #2 for HRP 203 (Methods for Reproducible Health Research) class.
 
 ## Summary of findings
-The script `analysis.R` was run on the cohort of 5,000 individuals (data in the raw-data folder; mean age 44.9, 57.3% female, 12.9% smokers). 
+The script `analysis.r` was run on the cohort of 5,000 individuals (data in the raw-data folder; mean age 44.9, 57.3% female, 12.9% smokers). 
 As `table1.csv` shows, a cardiac event occurred in 5.5% of the sample, 
 but the rate varied substantially across
 subgroups, specifically smokers had a much higher event rate than non-smokers, and male
