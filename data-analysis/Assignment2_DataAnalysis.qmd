@@ -42,7 +42,7 @@ Binary Variables: female, cardiac, smoke
 
 Continuous Variables: age, cost
 
-```{r}
+```{r, results='asis'}
 library(table1)
 
 # Make binary variables factors
