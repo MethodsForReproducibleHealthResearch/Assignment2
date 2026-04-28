@@ -1,0 +1,118 @@
+---
+title: "HRP-203-Assignment-2"
+author: "Nagireddy, Himaja"
+date: "2026-04-26"
+output: html_document
+---
+
+```{r}
+#Library
+library(gtsummary)
+library(effects)
+library(dplyr)
+library(ggplot2)
+library(pROC)
+```
+```{r}
+#Read data
+cohort_data_raw <- read.csv("raw-data/cohort.csv")
+cohort_data <- cohort_data_raw %>%
+  mutate(row_id = row_number())
+```
+```{r}
+#Comprehensive summary table
+tbl_summary(cohort_data)
+```
+```{r}
+#Create test-train split 
+set.seed(99)
+
+train <- cohort_data %>%
+  group_by(cardiac, smoke, female, age) %>%
+  slice_sample(prop = 0.7) %>% as.data.frame()
+
+test <- anti_join(cohort_data, train, by = join_by(row_id))
+
+```
+```{r}
+#Build regression models
+
+# Base model (CVD outcome)
+glm_base_cvd_model = glm(cardiac ~ smoke,
+                     data=train, family=binomial)
+summary(glm_base_cvd_model)
+
+# Full model with covariates (CVD outcome)
+glm_full_cvd_model = glm(cardiac ~ smoke + female + age,
+                     data=train, family=binomial)
+summary(glm_full_cvd_model)
+
+# Base model (cost outcome)
+glm_base_cost_model = glm(cost ~ smoke,
+                     data=train, family=gaussian)
+summary(glm_base_cost_model)
+
+# Full model with covariates (cost outcome)
+glm_full_cost_model = glm(cost ~ smoke + female + age,
+                     data=train, family=gaussian)
+summary(glm_full_cost_model)
+```
+```{r}
+#Test model fit on test data
+test$predict_full_cvd <- predict(glm_full_cvd_model, newdata=test, type = "response")
+test$predict_full_cost <- predict(glm_full_cost_model, newdata=test, type = "response")
+
+summary(test)
+```
+```{r}
+#Generate Validation Figures
+
+# CVD validation plot
+roc_cvd <- roc(test$cardiac, test$predict_full_cvd)
+ggroc(roc_cvd,color = "skyblue") +
+  labs(title="ROC Curve for CVD Model")
+auc(roc_cvd)
+
+# Cost validation plot
+ggplot(test, aes(x = predict_full_cost, y = cost)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, color = "skyblue") +
+  labs(x = "Predicted Cost", y = "Actual Healthcare Costs",
+       title = "Predicted vs Actual Healthcare Costs (Test Data)")
+```
+```{r}
+#Models Fit to All Data
+glm_full_cvd_all <- glm(cardiac ~ smoke + female + age,
+                         data = cohort_data, family = binomial)
+glm_full_cost_all <- glm(cost ~ smoke + female + age,
+                          data = cohort_data, family = gaussian)
+
+# Plot association between smoking and CVD
+smoke_cvd_effect <- as.data.frame(allEffects(glm_full_cvd_all)$smoke)
+
+ggplot(smoke_cvd_effect, aes(x = smoke, y = fit)) +
+  geom_point(size = 3, color = "skyblue") +
+  geom_errorbar(aes(ymin = lower, ymax = upper),
+                color = "skyblue") +
+  labs(x = "Smoking Status", y = "Predicted Probability of CVD",
+       title = "Adjusted Effect of Smoking on CVD Incidence")
+
+# Plot association between smoking and healthcare costs
+smoke_cost_effect <- as.data.frame(allEffects(glm_full_cost_all)$smoke)
+
+ggplot(smoke_cost_effect, aes(x = smoke, y = fit)) +
+  geom_point(size = 3, color = "skyblue") +
+  geom_errorbar(aes(ymin = lower, ymax = upper),
+                color = "skyblue") +
+  labs(x = "Smoking Status", y = "Predicted Healthcare Costs",
+       title = "Adjusted Effect of Smoking on Healthcare Costs")
+```
+```{r}
+## Summary of Findings:
+
+# - This analysis built two models to assess the association between (1) smoking and CVD incidence and (2) smoking and healthcare costs, adjusting for both age and sex.
+# - To validate the models, we created a 70/30 train-test data split. The training dataset was used to build the regression models, and the test dataset was used to compare predicted outcomes to actual outcomes. Validation was plotted as an ROC curve for the logistic regression (smoking and CVD incidence) and as a plot for the linear regression (smoking and healthcare costs).
+# - Our ROC curve yielded an AUC of approximately 0.78, indicating some discriminative ability of the CVD model. The validation plot for the cost model showed reasonable agreement between predicted and actual values.
+# - We then fit the models to the full dataset to assess the direction and magnitude of association between smoking and each outcome.
+# - Overall, we found a positive association between smoking and the predicted probability of CVD incidence, and a positive association between smoking and predicted healthcare costs.
+```
