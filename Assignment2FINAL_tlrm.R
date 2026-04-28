@@ -3,7 +3,7 @@ cohort <- read.csv("cohort.csv")
 install.packages("gtsummary")
 library(gtsummary)
 
-#############1: Table Describing Variables#############
+#############1: Table Describing Variables############
 table(cohort)
 summary(cohort)
 
